@@ -2,7 +2,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: wban-prices-api-service
-  namespace: utils
+  namespace: wban-utils
 spec:
   selector:
     app: wban-prices-api
