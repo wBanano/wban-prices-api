@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -22,6 +23,10 @@ var (
 )
 
 func main() {
+	var PORT = os.Getenv("PORT")
+	if PORT == "" {
+		PORT = "3333"
+	}
 	// Register the /prices route.
 	http.HandleFunc("/prices", pricesHandler)
 
@@ -31,8 +36,8 @@ func main() {
 		http.Error(w, "404", http.StatusNotFound)
 	})
 
-	log.Println("Server starting on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Server starting on http://localhost:" + PORT)
+	log.Fatal(http.ListenAndServe(":"+PORT, nil))
 }
 
 func pricesHandler(w http.ResponseWriter, r *http.Request) {
