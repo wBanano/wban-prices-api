@@ -50,7 +50,7 @@ func pricesHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if we have a valid cached result.
 	cacheMutex.Lock()
 	if time.Since(lastCacheTime) < CACHE_TIME && cachedPrices != nil {
-		log.Println("Cache hit")
+		log.Println("/prices | CACHE HIT")
 		cached := cachedPrices
 		cacheMutex.Unlock()
 
@@ -62,7 +62,7 @@ func pricesHandler(w http.ResponseWriter, r *http.Request) {
 	cacheMutex.Unlock()
 
 	// Cache miss: log and continue fetching new data.
-	log.Println("Cache miss: fetching new data")
+	log.Println("/prices | CACHE MISS | Fetching new data")
 
 	// Map of keys to CoinEx markets.
 	markets := map[string]string{
