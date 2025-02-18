@@ -14,47 +14,26 @@ import (
 const COINEX_API_URL = "https://api.coinex.com/v1"
 const CACHE_TIME = 10 * time.Second
 
-type TickerResponse struct {
-	Data struct {
-		Ticker struct {
-			Last string `json:"last"`
-		} `json:"ticker"`
-	} `json:"data"`
-}
-
-func getPrice(market string) (float64, error) {
-	url := fmt.Sprintf("%s%s%s", COINEX_API_URL, "/market/ticker?market=", market)
-	resp, err := http.Get(url)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-
-	var tickerResp TickerResponse
-	if err := json.Unmarshal(body, &tickerResp); err != nil {
-		return 0, err
-	}
-
-	return strconv.ParseFloat(tickerResp.Data.Ticker.Last, 64)
-}
-
-type priceResult struct {
-	key   string
-	price float64
-	err   error
-}
-
 // Global cache variables.
 var (
 	cachedPrices  map[string]float64
 	lastCacheTime time.Time
 	cacheMutex    sync.Mutex
 )
+
+func main() {
+	// Register the /prices route.
+	http.HandleFunc("/prices", pricesHandler)
+
+	// Catch-all handler for other paths.
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		http.Error(w, "404", http.StatusNotFound)
+	})
+
+	log.Println("Server starting on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
 
 func pricesHandler(w http.ResponseWriter, r *http.Request) {
 	// Handle CORS pre-flight OPTIONS request.
@@ -95,13 +74,13 @@ func pricesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a buffered channel to collect results.
-	resultChan := make(chan priceResult, len(markets))
+	resultChan := make(chan PriceResult, len(markets))
 
 	// Launch a goroutine for each market.
 	for key, market := range markets {
 		go func(key, market string) {
 			price, err := getPrice(market)
-			resultChan <- priceResult{key: key, price: price, err: err}
+			resultChan <- PriceResult{key: key, price: price, err: err}
 		}(key, market)
 	}
 
@@ -129,16 +108,37 @@ func pricesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
-	// Register the /prices route.
-	http.HandleFunc("/prices", pricesHandler)
+func getPrice(market string) (float64, error) {
+	url := fmt.Sprintf("%s%s%s", COINEX_API_URL, "/market/ticker?market=", market)
+	resp, err := http.Get(url)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
 
-	// Catch-all handler for other paths.
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-		http.Error(w, "404", http.StatusNotFound)
-	})
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
 
-	log.Println("Server starting on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	var tickerResp TickerResponse
+	if err := json.Unmarshal(body, &tickerResp); err != nil {
+		return 0, err
+	}
+
+	return strconv.ParseFloat(tickerResp.Data.Ticker.Last, 64)
+}
+
+type TickerResponse struct {
+	Data struct {
+		Ticker struct {
+			Last string `json:"last"`
+		} `json:"ticker"`
+	} `json:"data"`
+}
+
+type PriceResult struct {
+	key   string
+	price float64
+	err   error
 }
