@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: wban-prices-api-service
+  namespace: utils
+spec:
+  selector:
+    app: wban-prices-api
+  type: ClusterIP
+  ports:
+    - port: 3333
+      targetPort: 3333

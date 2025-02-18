@@ -29,6 +29,15 @@ func main() {
 	}
 	// Register the /prices route.
 	http.HandleFunc("/prices", pricesHandler)
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Write([]byte("OK"))
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte("OK"))
+	})
 
 	// Catch-all handler for other paths.
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +50,6 @@ func main() {
 }
 
 func pricesHandler(w http.ResponseWriter, r *http.Request) {
-	// Handle CORS pre-flight OPTIONS request.
 	if r.Method == http.MethodOptions {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Write([]byte("OK"))

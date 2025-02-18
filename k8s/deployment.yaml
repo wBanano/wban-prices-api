@@ -1,0 +1,56 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: wban-prices-api-deployment
+  namespace: wban-utils
+  labels:
+    app: wban-prices-api
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: wban-prices-api
+  template:
+    metadata:
+      labels:
+        app: wban-prices-api
+    spec:
+      containers:
+        - name: wban-prices-api
+          image: replaceme
+          resources:
+            requests:
+              cpu: 100m
+              memory: 0.1Gi
+            limits:
+              cpu: 500m
+              memory: 0.5Gi
+          ports:
+            - containerPort: 3333
+          imagePullPolicy: "Always"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3333
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3333
+            initialDelaySeconds: 0
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3333
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          envFrom:
+            - secretRef:
+                name: wban-prices-api-secret
