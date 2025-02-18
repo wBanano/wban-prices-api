@@ -15,7 +15,7 @@ const COINEX_API_URL = "https://api.coinex.com/v1"
 const CACHE_TIME = 10 * time.Second
 const PORT = "3333"
 
-// Global cache variables.
+// Global cache variables
 var (
 	cachedPrices  map[string]float64
 	lastCacheTime time.Time
