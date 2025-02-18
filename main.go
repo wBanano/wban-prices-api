@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -14,6 +13,7 @@ import (
 
 const COINEX_API_URL = "https://api.coinex.com/v1"
 const CACHE_TIME = 10 * time.Second
+const PORT = "3333"
 
 // Global cache variables.
 var (
@@ -23,10 +23,6 @@ var (
 )
 
 func main() {
-	var PORT = os.Getenv("PORT")
-	if PORT == "" {
-		PORT = "3333"
-	}
 	// Register the /prices route.
 	http.HandleFunc("/prices", pricesHandler)
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
